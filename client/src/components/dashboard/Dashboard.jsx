@@ -5,15 +5,21 @@ import {
   HiOutlineClock,
   HiOutlineCheckCircle,
   HiOutlineExclamation,
+  HiOutlineBell,
 } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/client";
 import TaskForm from "../tasks/TaskForm";
 import TaskCard from "../tasks/TaskCard";
+import TeamDashboard from "./TeamDashboard";
+import ActivityFeed from "./ActivityFeed";
+import NotificationCenter from "../notifications/NotificationCenter";
 
 export default function Dashboard() {
   const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
+  const [tab, setTab] = useState("tasks");
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
@@ -84,12 +90,20 @@ export default function Dashboard() {
             Welcome back, {user?.firstName}! Here's your overview.
           </p>
         </div>
-        <button
-          onClick={() => setShowForm(true)}
-          className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition"
-        >
-          + New Task
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setNotificationOpen(true)}
+            className="px-4 py-2 bg-blue-50 text-blue-600 text-sm font-semibold rounded-lg hover:bg-blue-100 transition flex items-center gap-2"
+          >
+            <HiOutlineBell /> Notifications
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg transition"
+          >
+            + New Task
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -116,31 +130,63 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* Today's Tasks */}
-      <div className="bg-white rounded-xl border border-slate-200">
-        <div className="px-5 py-4 border-b border-slate-100">
-          <h2 className="text-lg font-semibold text-slate-900">
-            Today's Tasks
-          </h2>
-        </div>
-        <div className="p-5">
-          {loading ? (
-            <div className="text-center py-8 text-slate-400 text-sm">
-              Loading...
-            </div>
-          ) : tasks.length === 0 ? (
-            <div className="text-center py-8 text-slate-400 text-sm">
-              No tasks for today. Click "New Task" to add one.
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {tasks.map((task) => (
-                <TaskCard key={task._id} task={task} onUpdate={fetchTasks} />
-              ))}
-            </div>
-          )}
+      {/* Tabs */}
+      <div className="mb-6 border-b border-gray-200">
+        <div className="flex gap-0">
+          {[
+            { id: "tasks", label: "My Tasks" },
+            { id: "team", label: "Team" },
+            { id: "activity", label: "Activity" },
+          ].map(navTab => (
+            <button
+              key={navTab.id}
+              onClick={() => setTab(navTab.id)}
+              className={`px-6 py-3 border-b-2 font-medium transition ${
+                tab === navTab.id
+                  ? "border-blue-600 text-blue-600"
+                  : "border-transparent text-gray-600 hover:text-gray-900"
+              }`}
+            >
+              {navTab.label}
+            </button>
+          ))}
         </div>
       </div>
+
+      {/* Tab Content */}
+      {tab === "tasks" && (
+        <div className="bg-white rounded-xl border border-slate-200">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Today's Tasks
+            </h2>
+          </div>
+          <div className="p-5">
+            {loading ? (
+              <div className="text-center py-8 text-slate-400 text-sm">
+                Loading...
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="text-center py-8 text-slate-400 text-sm">
+                No tasks for today. Click "New Task" to add one.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {tasks.map((task) => (
+                  <TaskCard key={task._id} task={task} onUpdate={fetchTasks} />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {tab === "team" && <TeamDashboard />}
+
+      {tab === "activity" && <ActivityFeed />}
+
+      {/* Notification Center */}
+      <NotificationCenter isOpen={notificationOpen} onClose={() => setNotificationOpen(false)} />
 
       {/* Task Form Modal */}
       {showForm && (
