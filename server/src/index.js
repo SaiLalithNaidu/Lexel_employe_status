@@ -16,16 +16,16 @@ app.use(cors({ origin: "http://localhost:5173", credentials: true }));
 app.use(express.json());
 app.use(mongoSanitize());
 
-// Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/admin", adminRoutes);
-app.use("/api", teamRoutes);
-app.use("/api/tasks", taskRoutes);
-
-// Health check
+// Health check (before auth-protected routes)
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
 });
+
+// Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/admin", adminRoutes);
+app.use("/api/tasks", taskRoutes);
+app.use("/api", teamRoutes);
 
 // Start server
 const PORT = process.env.PORT || 5000;
