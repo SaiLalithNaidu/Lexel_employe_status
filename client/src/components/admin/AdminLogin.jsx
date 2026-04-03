@@ -4,6 +4,8 @@ import {
   HiOutlineMail,
   HiOutlineLockClosed,
   HiOutlineShieldCheck,
+  HiOutlineEye,
+  HiOutlineEyeOff,
 } from "react-icons/hi";
 import toast from "react-hot-toast";
 import api from "../../api/client";
@@ -12,6 +14,7 @@ import { useAuth } from "../../context/AuthContext";
 export default function AdminLogin() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -74,14 +77,25 @@ export default function AdminLogin() {
             <div className="relative">
               <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 value={form.password}
                 onChange={handleChange}
                 required
                 placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
+                className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-500 focus:border-transparent transition"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+              >
+                {showPassword ? (
+                  <HiOutlineEyeOff className="text-lg" />
+                ) : (
+                  <HiOutlineEye className="text-lg" />
+                )}
+              </button>
             </div>
           </div>
 

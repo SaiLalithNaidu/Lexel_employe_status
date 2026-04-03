@@ -92,11 +92,17 @@ exports.getEmployeeTasks = async (req, res) => {
       case "yesterday":
         query.taskDate = { $gte: yesterday, $lt: today };
         break;
+      case "yet_to_start":
+        query.status = "yet_to_start";
+        break;
       case "pending":
         query.status = "pending";
         break;
       case "in_progress":
         query.status = "in_progress";
+        break;
+      case "on_hold":
+        query.status = "on_hold";
         break;
       case "completed":
         query.status = "completed";

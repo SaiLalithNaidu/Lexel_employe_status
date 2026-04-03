@@ -1,5 +1,17 @@
 import { useState, useEffect } from "react";
-import { HiOutlineBell, HiOutlineX, HiOutlineTrash } from "react-icons/hi";
+import {
+  HiOutlineBell,
+  HiOutlineX,
+  HiOutlineTrash,
+  HiOutlineClipboardList,
+  HiOutlineSortAscending,
+  HiOutlineCheckCircle,
+  HiOutlineClock,
+  HiOutlineUser,
+  HiOutlineExclamationCircle,
+  HiOutlineSwitchHorizontal,
+  HiOutlineChat,
+} from "react-icons/hi";
 import api from "../../api/client";
 import Badge from "../shared/Badge";
 import LoadingState from "../shared/LoadingState";
@@ -33,9 +45,11 @@ export default function NotificationCenter({ isOpen, onClose }) {
   const handleMarkAsRead = async (notificationId) => {
     try {
       await api.put(`/api/notifications/${notificationId}/read`);
-      setNotifications(notifications.map(n =>
-        n._id === notificationId ? { ...n, isRead: true } : n
-      ));
+      setNotifications(
+        notifications.map((n) =>
+          n._id === notificationId ? { ...n, isRead: true } : n,
+        ),
+      );
       setUnreadCount(Math.max(0, unreadCount - 1));
     } catch (err) {
       toast.error("Failed to mark as read");
@@ -45,7 +59,7 @@ export default function NotificationCenter({ isOpen, onClose }) {
   const handleMarkAllAsRead = async () => {
     try {
       await api.put("/api/notifications/read-all");
-      setNotifications(notifications.map(n => ({ ...n, isRead: true })));
+      setNotifications(notifications.map((n) => ({ ...n, isRead: true })));
       setUnreadCount(0);
       toast.success("All marked as read");
     } catch (err) {
@@ -56,7 +70,7 @@ export default function NotificationCenter({ isOpen, onClose }) {
   const handleDelete = async (notificationId) => {
     try {
       await api.delete(`/api/notifications/${notificationId}`);
-      setNotifications(notifications.filter(n => n._id !== notificationId));
+      setNotifications(notifications.filter((n) => n._id !== notificationId));
       toast.success("Notification deleted");
     } catch (err) {
       toast.error("Failed to delete notification");
@@ -65,16 +79,16 @@ export default function NotificationCenter({ isOpen, onClose }) {
 
   const getNotificationIcon = (type) => {
     const icons = {
-      task_assigned: "📋",
-      task_forwarded: "↗️",
-      task_completed: "✅",
-      deadline_alert: "⏰",
-      mentioned: "👤",
-      priority_changed: "🔴",
-      task_status_updated: "🔄",
-      comment_added: "💬",
+      task_assigned: HiOutlineClipboardList,
+      task_forwarded: HiOutlineSortAscending,
+      task_completed: HiOutlineCheckCircle,
+      deadline_alert: HiOutlineClock,
+      mentioned: HiOutlineUser,
+      priority_changed: HiOutlineExclamationCircle,
+      task_status_updated: HiOutlineSwitchHorizontal,
+      comment_added: HiOutlineChat,
     };
-    return icons[type] || "🔔";
+    return icons[type] || HiOutlineBell;
   };
 
   if (!isOpen) return null;
@@ -126,75 +140,81 @@ export default function NotificationCenter({ isOpen, onClose }) {
             <LoadingState />
           ) : notifications.length === 0 ? (
             <div className="p-4">
-              <EmptyState title="No notifications" description="You're all caught up!" />
+              <EmptyState
+                title="No notifications"
+                description="You're all caught up!"
+              />
             </div>
           ) : (
             <div className="divide-y">
-              {notifications.map(notif => (
-                <div
-                  key={notif._id}
-                  className={`p-4 hover:bg-gray-50 transition ${
-                    !notif.isRead ? "bg-blue-50" : ""
-                  }`}
-                >
-                  <div className="flex gap-3">
-                    {/* Icon */}
-                    <span className="text-2xl flex-shrink-0">
-                      {getNotificationIcon(notif.type)}
-                    </span>
-
-                    {/* Content */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <p
-                            className={`text-sm ${
-                              notif.isRead
-                                ? "text-gray-600"
-                                : "font-semibold text-gray-900"
-                            }`}
-                          >
-                            {notif.message}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {new Date(notif.createdAt).toLocaleDateString()}
-                          </p>
-                        </div>
-
-                        {/* Actions */}
-                        <div className="flex gap-1 flex-shrink-0">
-                          {!notif.isRead && (
-                            <button
-                              onClick={() => handleMarkAsRead(notif._id)}
-                              className="p-1 text-blue-600 hover:bg-blue-100 rounded"
-                              title="Mark as read"
-                            >
-                              •
-                            </button>
-                          )}
-                          <button
-                            onClick={() => handleDelete(notif._id)}
-                            className="p-1 text-red-600 hover:bg-red-100 rounded"
-                            title="Delete"
-                          >
-                            <HiOutlineTrash size={14} />
-                          </button>
-                        </div>
+              {notifications.map((notif) => {
+                const NotifIcon = getNotificationIcon(notif.type);
+                return (
+                  <div
+                    key={notif._id}
+                    className={`p-4 hover:bg-gray-50 transition ${
+                      !notif.isRead ? "bg-blue-50" : ""
+                    }`}
+                  >
+                    <div className="flex gap-3">
+                      {/* Icon */}
+                      <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0">
+                        <NotifIcon className="w-4 h-4 text-slate-600" />
                       </div>
 
-                      {/* Task Link */}
-                      {notif.actionUrl && (
-                        <a
-                          href={notif.actionUrl}
-                          className="text-xs text-blue-600 hover:underline mt-2 inline-block"
-                        >
-                          View task →
-                        </a>
-                      )}
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p
+                              className={`text-sm ${
+                                notif.isRead
+                                  ? "text-gray-600"
+                                  : "font-semibold text-gray-900"
+                              }`}
+                            >
+                              {notif.message}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(notif.createdAt).toLocaleDateString()}
+                            </p>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex gap-1 flex-shrink-0">
+                            {!notif.isRead && (
+                              <button
+                                onClick={() => handleMarkAsRead(notif._id)}
+                                className="p-1 text-blue-600 hover:bg-blue-100 rounded"
+                                title="Mark as read"
+                              >
+                                •
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleDelete(notif._id)}
+                              className="p-1 text-red-600 hover:bg-red-100 rounded"
+                              title="Delete"
+                            >
+                              <HiOutlineTrash size={14} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Task Link */}
+                        {notif.actionUrl && (
+                          <a
+                            href={notif.actionUrl}
+                            className="text-xs text-blue-600 hover:underline mt-2 inline-block"
+                          >
+                            View task →
+                          </a>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

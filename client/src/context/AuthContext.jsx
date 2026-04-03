@@ -43,8 +43,14 @@ export function AuthProvider({ children }) {
         try {
           const res = await api.get("/auth/me");
           dispatch({ type: "SET_USER", payload: res.data.user });
-        } catch {
-          dispatch({ type: "LOGOUT" });
+        } catch (err) {
+          // Only logout on 401 (unauthorized) - not on network errors
+          if (err.response?.status === 401) {
+            dispatch({ type: "LOGOUT" });
+          } else {
+            // Keep existing user from localStorage on network errors
+            dispatch({ type: "SET_LOADING", payload: false });
+          }
         }
       } else {
         dispatch({ type: "SET_LOADING", payload: false });
@@ -61,8 +67,12 @@ export function AuthProvider({ children }) {
     dispatch({ type: "LOGOUT" });
   };
 
+  const updateUser = (userData) => {
+    dispatch({ type: "SET_USER", payload: userData });
+  };
+
   return (
-    <AuthContext.Provider value={{ ...state, login, logout }}>
+    <AuthContext.Provider value={{ ...state, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

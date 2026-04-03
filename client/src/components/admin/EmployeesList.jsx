@@ -32,14 +32,15 @@ export default function EmployeesList({ onSelectEmployee }) {
   };
 
   const teams = useMemo(() => {
-    return [...new Set(employees.map(emp => emp.team).filter(Boolean))];
+    return [...new Set(employees.map((emp) => emp.team).filter(Boolean))];
   }, [employees]);
 
   const filteredEmployees = useMemo(() => {
-    let filtered = employees.filter(emp => {
-      const matchesSearch = emp.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           emp.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           emp.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    let filtered = employees.filter((emp) => {
+      const matchesSearch =
+        emp.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        emp.email?.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesTeam = !filterTeam || emp.team === filterTeam;
       return matchesSearch && matchesTeam;
     });
@@ -94,8 +95,10 @@ export default function EmployeesList({ onSelectEmployee }) {
             className="rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">All Teams</option>
-            {teams.map(team => (
-              <option key={team} value={team}>{team}</option>
+            {teams.map((team) => (
+              <option key={team} value={team}>
+                {team}
+              </option>
             ))}
           </select>
 
@@ -119,20 +122,42 @@ export default function EmployeesList({ onSelectEmployee }) {
           <table className="w-full">
             <thead className="border-b bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Employee</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Team</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Tasks</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Completion</th>
-                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
-                <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">Action</th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  Employee
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  Team
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  Tasks
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  Completion
+                </th>
+                <th className="px-6 py-3 text-left text-sm font-semibold text-gray-700">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-center text-sm font-semibold text-gray-700">
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody>
-              {filteredEmployees.map(emp => (
-                <tr key={emp._id} className="border-b hover:bg-gray-50 transition">
+              {filteredEmployees.map((emp) => (
+                <tr
+                  key={emp._id}
+                  className="border-b hover:bg-gray-50 transition"
+                >
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-3">
-                      <Avatar user={{ firstName: emp.firstName, lastName: emp.lastName }} size="sm" />
+                      <Avatar
+                        user={{
+                          firstName: emp.firstName,
+                          lastName: emp.lastName,
+                          avatarUrl: emp.avatarUrl,
+                        }}
+                        size="sm"
+                      />
                       <div>
                         <p className="font-medium text-gray-900">
                           {emp.firstName} {emp.lastName}
@@ -146,8 +171,12 @@ export default function EmployeesList({ onSelectEmployee }) {
                   </td>
                   <td className="px-6 py-4 text-sm text-gray-700">
                     <div className="flex gap-2">
-                      <span className="font-medium">{emp.completedTasks || 0}</span>
-                      <span className="text-gray-500">/ {emp.totalTasks || 0}</span>
+                      <span className="font-medium">
+                        {emp.completedTasks || 0}
+                      </span>
+                      <span className="text-gray-500">
+                        / {emp.totalTasks || 0}
+                      </span>
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -166,7 +195,11 @@ export default function EmployeesList({ onSelectEmployee }) {
                   <td className="px-6 py-4">
                     <Badge
                       type="status"
-                      value={emp.totalTasks === emp.completedTasks ? "completed" : "active"}
+                      value={
+                        emp.totalTasks === emp.completedTasks
+                          ? "completed"
+                          : "active"
+                      }
                     />
                   </td>
                   <td className="px-6 py-4 text-center">

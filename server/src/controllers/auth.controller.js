@@ -1,5 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const fs = require("fs");
+const path = require("path");
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "24h" });
@@ -153,6 +155,86 @@ exports.getMe = async (req, res) => {
         role: req.user.role,
         status: req.user.status,
         avatarUrl: req.user.avatarUrl,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// POST /api/auth/avatar
+exports.uploadAvatar = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const user = await User.findById(req.user._id);
+
+    // Delete old avatar file if exists
+    if (user.avatarUrl) {
+      const oldPath = path.join(
+        __dirname,
+        "../../uploads/avatars",
+        path.basename(user.avatarUrl),
+      );
+      if (fs.existsSync(oldPath)) {
+        fs.unlinkSync(oldPath);
+      }
+    }
+
+    user.avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    await user.save();
+
+    res.json({
+      message: "Avatar uploaded successfully",
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        designation: user.designation,
+        team: user.team,
+        role: user.role,
+        status: user.status,
+        avatarUrl: user.avatarUrl,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+// DELETE /api/auth/avatar
+exports.removeAvatar = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user.avatarUrl) {
+      const filePath = path.join(
+        __dirname,
+        "../../uploads/avatars",
+        path.basename(user.avatarUrl),
+      );
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      user.avatarUrl = null;
+      await user.save();
+    }
+
+    res.json({
+      message: "Avatar removed",
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        designation: user.designation,
+        team: user.team,
+        role: user.role,
+        status: user.status,
+        avatarUrl: user.avatarUrl,
       },
     });
   } catch (error) {

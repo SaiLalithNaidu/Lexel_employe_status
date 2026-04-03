@@ -22,8 +22,16 @@ const taskSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "in_progress", "completed", "forwarded", "blocked"],
-      default: "pending",
+      enum: [
+        "yet_to_start",
+        "pending",
+        "in_progress",
+        "completed",
+        "on_hold",
+        "forwarded",
+        "blocked",
+      ],
+      default: "yet_to_start",
     },
     priority: {
       type: String,
@@ -61,6 +69,10 @@ const taskSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    completedAt: {
+      type: Date,
+      default: null,
+    },
     estimatedDuration: {
       type: Number, // in hours
       default: null,
@@ -68,6 +80,23 @@ const taskSchema = new mongoose.Schema(
     actualDuration: {
       type: Number, // in hours
       default: null,
+    },
+
+    // Git Issue Tracking
+    gitIssueUrl: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    gitIssueNumber: {
+      type: String,
+      default: null,
+      trim: true,
+    },
+    gitRepository: {
+      type: String,
+      default: null,
+      trim: true,
     },
 
     // NEW: Subtasks
@@ -135,7 +164,7 @@ const taskSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Indexes for better query performance

@@ -7,17 +7,39 @@ const User = require("../models/User");
 // POST /api/tasks
 exports.createTask = async (req, res) => {
   try {
-    const { title, description, status, priority, taskType, taskDate } =
-      req.body;
-
-    const task = await Task.create({
-      userId: req.user._id,
+    const {
       title,
       description,
       status,
       priority,
       taskType,
       taskDate,
+      category,
+      dueDate,
+      estimatedDuration,
+      gitIssueUrl,
+      gitIssueNumber,
+      gitRepository,
+      assigneeId,
+    } = req.body;
+
+    // Use assigneeId if provided, otherwise use logged-in user
+    const userId = assigneeId || req.user._id;
+
+    const task = await Task.create({
+      userId,
+      title,
+      description,
+      status,
+      priority,
+      taskType,
+      taskDate,
+      category,
+      dueDate,
+      estimatedDuration,
+      gitIssueUrl,
+      gitIssueNumber,
+      gitRepository,
     });
 
     res.status(201).json(task);
@@ -67,6 +89,19 @@ exports.updateTask = async (req, res) => {
     // Save edit history
     if (historyEntries.length > 0) {
       await TaskEditHistory.insertMany(historyEntries);
+    }
+
+    // Set completedAt when status changes to completed
+    if (req.body.status === "completed" && task.status !== "completed") {
+      req.body.completedAt = new Date();
+    }
+    // Clear completedAt if status changes from completed to something else
+    if (
+      req.body.status &&
+      req.body.status !== "completed" &&
+      task.status === "completed"
+    ) {
+      req.body.completedAt = null;
     }
 
     // Update task
@@ -147,8 +182,13 @@ exports.forwardTask = async (req, res) => {
     }
 
     // Verify authorization
-    if (task.userId.toString() !== req.user._id.toString() && task.assignedBy?.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ message: "Not authorized to forward this task" });
+    if (
+      task.userId.toString() !== req.user._id.toString() &&
+      task.assignedBy?.toString() !== req.user._id.toString()
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to forward this task" });
     }
 
     task.forwardedTo = forwardTo;
@@ -264,17 +304,22 @@ exports.getMyTasks = async (req, res) => {
       .sort({ dueDate: 1, createdAt: -1 });
 
     const stats = {
-      totalToday: tasks.filter(t => {
+      totalToday: tasks.filter((t) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         return t.taskDate >= today;
       }).length,
-      completedToday: tasks.filter(t => {
+      completedToday: tasks.filter((t) => {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         return t.status === "completed" && t.updatedAt >= today;
       }).length,
-      overdue: tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "completed").length,
+      overdue: tasks.filter(
+        (t) =>
+          t.dueDate &&
+          new Date(t.dueDate) < new Date() &&
+          t.status !== "completed",
+      ).length,
     };
 
     res.json({
@@ -291,8 +336,11 @@ exports.getMyTasks = async (req, res) => {
 exports.getTeamTasks = async (req, res) => {
   try {
     const user = await User.findById(req.user._id);
-    const teamMembers = await User.find({ team: user.team, status: "approved" });
-    const teamMemberIds = teamMembers.map(m => m._id);
+    const teamMembers = await User.find({
+      team: user.team,
+      status: "approved",
+    });
+    const teamMemberIds = teamMembers.map((m) => m._id);
 
     const tasks = await Task.find({ userId: { $in: teamMemberIds } })
       .populate("userId", "firstName lastName avatarUrl team")
@@ -329,7 +377,7 @@ exports.searchTasks = async (req, res) => {
 
     if (team) {
       const teamMembers = await User.find({ team });
-      query.userId = { $in: teamMembers.map(m => m._id) };
+      query.userId = { $in: teamMembers.map((m) => m._id) };
     }
 
     const tasks = await Task.find(query)

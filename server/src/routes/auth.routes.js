@@ -3,6 +3,7 @@ const router = express.Router();
 const { body } = require("express-validator");
 const authController = require("../controllers/auth.controller");
 const auth = require("../middleware/auth");
+const upload = require("../middleware/upload");
 
 router.post(
   "/register",
@@ -67,5 +68,14 @@ router.post(
 );
 
 router.get("/me", auth, authController.getMe);
+
+// Avatar upload/remove
+router.post(
+  "/avatar",
+  auth,
+  upload.single("avatar"),
+  authController.uploadAvatar,
+);
+router.delete("/avatar", auth, authController.removeAvatar);
 
 module.exports = router;

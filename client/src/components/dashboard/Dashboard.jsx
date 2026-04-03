@@ -6,6 +6,7 @@ import {
   HiOutlineCheckCircle,
   HiOutlineExclamation,
   HiOutlineBell,
+  HiOutlinePause,
 } from "react-icons/hi";
 import { useAuth } from "../../context/AuthContext";
 import api from "../../api/client";
@@ -22,8 +23,10 @@ export default function Dashboard() {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [stats, setStats] = useState({
     total: 0,
+    yetToStart: 0,
     pending: 0,
     inProgress: 0,
+    onHold: 0,
     completed: 0,
   });
   const [showForm, setShowForm] = useState(false);
@@ -38,8 +41,10 @@ export default function Dashboard() {
       const all = allRes.data;
       setStats({
         total: all.length,
+        yetToStart: all.filter((t) => t.status === "yet_to_start").length,
         pending: all.filter((t) => t.status === "pending").length,
         inProgress: all.filter((t) => t.status === "in_progress").length,
+        onHold: all.filter((t) => t.status === "on_hold").length,
         completed: all.filter((t) => t.status === "completed").length,
       });
     } catch (err) {
@@ -61,16 +66,22 @@ export default function Dashboard() {
       color: "bg-primary-50 text-primary-600",
     },
     {
-      label: "Pending",
-      value: stats.pending,
+      label: "Yet to Start",
+      value: stats.yetToStart,
       icon: HiOutlineClock,
-      color: "bg-amber-50 text-amber-600",
+      color: "bg-gray-50 text-gray-600",
     },
     {
       label: "In Progress",
       value: stats.inProgress,
       icon: HiOutlineExclamation,
       color: "bg-blue-50 text-blue-600",
+    },
+    {
+      label: "On Hold",
+      value: stats.onHold,
+      icon: HiOutlinePause,
+      color: "bg-orange-50 text-orange-600",
     },
     {
       label: "Completed",
@@ -107,7 +118,7 @@ export default function Dashboard() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
         {statCards.map((stat) => (
           <div
             key={stat.label}
@@ -137,7 +148,7 @@ export default function Dashboard() {
             { id: "tasks", label: "My Tasks" },
             { id: "team", label: "Team" },
             { id: "activity", label: "Activity" },
-          ].map(navTab => (
+          ].map((navTab) => (
             <button
               key={navTab.id}
               onClick={() => setTab(navTab.id)}
@@ -186,7 +197,10 @@ export default function Dashboard() {
       {tab === "activity" && <ActivityFeed />}
 
       {/* Notification Center */}
-      <NotificationCenter isOpen={notificationOpen} onClose={() => setNotificationOpen(false)} />
+      <NotificationCenter
+        isOpen={notificationOpen}
+        onClose={() => setNotificationOpen(false)}
+      />
 
       {/* Task Form Modal */}
       {showForm && (

@@ -5,6 +5,8 @@ import {
   HiOutlineMail,
   HiOutlineLockClosed,
   HiOutlineBriefcase,
+  HiOutlineEye,
+  HiOutlineEyeOff,
 } from "react-icons/hi";
 import toast from "react-hot-toast";
 import api from "../../api/client";
@@ -19,6 +21,7 @@ export default function SignUpForm() {
     team: "development",
   });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -122,15 +125,26 @@ export default function SignUpForm() {
             <div className="relative">
               <HiOutlineLockClosed className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg" />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 value={form.password}
                 onChange={handleChange}
                 required
                 minLength={6}
                 placeholder="Min 6 characters"
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
+                className="w-full pl-10 pr-10 py-2.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
+              >
+                {showPassword ? (
+                  <HiOutlineEyeOff className="text-lg" />
+                ) : (
+                  <HiOutlineEye className="text-lg" />
+                )}
+              </button>
             </div>
           </div>
 
