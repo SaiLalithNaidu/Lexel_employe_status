@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "build": "cd server && npm install",
-    "start": "cd server && npm start"
+    "postinstall": "npm install --prefix server",
+    "build": "echo build done",
+    "start": "npm start --prefix server"
   }
 }
