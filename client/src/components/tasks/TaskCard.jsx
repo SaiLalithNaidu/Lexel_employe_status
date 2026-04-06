@@ -4,6 +4,7 @@ import {
   HiOutlineTrash,
   HiOutlineClock,
   HiOutlineExternalLink,
+  HiOutlineEye,
   HiOutlineLightningBolt,
   HiOutlineTag,
   HiOutlineBeaker,
@@ -17,6 +18,7 @@ import toast from "react-hot-toast";
 import api from "../../api/client";
 import TaskForm from "./TaskForm";
 import EditHistory from "./EditHistory";
+import TaskDetailsModal from "./TaskDetailsModal";
 
 const statusColors = {
   yet_to_start: "border-l-gray-400 bg-gray-50",
@@ -66,6 +68,7 @@ const categoryIcons = {
 export default function TaskCard({ task, onUpdate, readOnly = false }) {
   const [showEdit, setShowEdit] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   const handleDelete = async () => {
     if (!window.confirm("Delete this task?")) return;
@@ -165,6 +168,13 @@ export default function TaskCard({ task, onUpdate, readOnly = false }) {
                 <HiOutlineExternalLink className="text-base" />
               </a>
             )}
+            <button
+              onClick={() => setShowDetails(true)}
+              className="p-1.5 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-blue-600 transition"
+              title="View Details"
+            >
+              <HiOutlineEye className="text-base" />
+            </button>
             {!readOnly && (
               <>
                 <button
@@ -210,6 +220,13 @@ export default function TaskCard({ task, onUpdate, readOnly = false }) {
           taskId={task._id}
           taskTitle={task.title}
           onClose={() => setShowHistory(false)}
+        />
+      )}
+
+      {showDetails && (
+        <TaskDetailsModal
+          taskId={task._id}
+          onClose={() => setShowDetails(false)}
         />
       )}
     </>
