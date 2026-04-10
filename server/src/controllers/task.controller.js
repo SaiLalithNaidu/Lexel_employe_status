@@ -281,6 +281,82 @@ exports.addComment = async (req, res) => {
   }
 };
 
+// POST /api/tasks/:id/assign - Assign task to another team member
+exports.assignTask = async (req, res) => {
+  try {
+    const { assignToUserId, notes } = req.body;
+
+    // Validate task exists
+    const task = await Task.findById(req.params.id);
+    if (!task) {
+      return res.status(404).json({ message: "Task not found" });
+    }
+
+    // Ensure user is task owner
+    if (task.userId.toString() !== req.user._id.toString()) {
+      return res
+        .status(403)
+        .json({ message: "You can only assign tasks you own" });
+    }
+
+    // Validate target user exists
+    const targetUser = await User.findById(assignToUserId);
+    if (!targetUser) {
+      return res.status(404).json({ message: "Target user not found" });
+    }
+
+    // Ensure target user is in the same team
+    const currentUser = await User.findById(req.user._id);
+    if (currentUser.team !== targetUser.team) {
+      return res
+        .status(400)
+        .json({ message: "Can only assign tasks to members of your team" });
+    }
+
+    // Ensure target user is approved
+    if (targetUser.status !== "approved") {
+      return res
+        .status(400)
+        .json({ message: "Can only assign tasks to approved team members" });
+    }
+
+    // Cannot assign to self
+    if (assignToUserId === req.user._id.toString()) {
+      return res
+        .status(400)
+        .json({ message: "Cannot assign a task to yourself" });
+    }
+
+    // Update task assignment
+    task.userId = assignToUserId;
+    task.assignedBy = req.user._id;
+    task.isAdminAssigned = false;
+    await task.save();
+
+    // Create notification for assigned user
+    await Notification.create({
+      recipientId: assignToUserId,
+      type: "task_assigned",
+      relatedTaskId: task._id,
+      relatedUserId: req.user._id,
+      message: `${currentUser.firstName} ${currentUser.lastName} assigned task "${task.title}" to you. Notes: ${notes}`,
+      actionUrl: `/tasks/${task._id}`,
+    });
+
+    // Populate for response
+    await task.populate("userId", "firstName lastName email");
+    await task.populate("assignedBy", "firstName lastName email");
+
+    res.json({
+      success: true,
+      message: "Task assigned successfully",
+      task,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // GET /api/tasks/me - Get my tasks
 exports.getMyTasks = async (req, res) => {
   try {

@@ -44,7 +44,16 @@ router.post(
   "/:id/forward",
   [
     body("forwardTo").notEmpty().withMessage("Forward to user is required"),
-    body("forwardingReason").isIn(["completed", "blocked", "help_needed", "for_review", "ready_for_testing", "reassigned"]).withMessage("Invalid forwarding reason"),
+    body("forwardingReason")
+      .isIn([
+        "completed",
+        "blocked",
+        "help_needed",
+        "for_review",
+        "ready_for_testing",
+        "reassigned",
+      ])
+      .withMessage("Invalid forwarding reason"),
   ],
   (req, res, next) => {
     const { validationResult } = require("express-validator");
@@ -54,14 +63,17 @@ router.post(
     }
     next();
   },
-  taskController.forwardTask
+  taskController.forwardTask,
 );
 
 // Add comment
 router.post(
   "/:id/comments",
   [
-    body("content").trim().notEmpty().withMessage("Comment content is required"),
+    body("content")
+      .trim()
+      .notEmpty()
+      .withMessage("Comment content is required"),
   ],
   (req, res, next) => {
     const { validationResult } = require("express-validator");
@@ -71,7 +83,28 @@ router.post(
     }
     next();
   },
-  taskController.addComment
+  taskController.addComment,
+);
+
+// Assign task to another team member
+router.post(
+  "/:id/assign",
+  [
+    body("assignToUserId").notEmpty().withMessage("Target user is required"),
+    body("notes")
+      .trim()
+      .notEmpty()
+      .withMessage("Assignment notes are required"),
+  ],
+  (req, res, next) => {
+    const { validationResult } = require("express-validator");
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+    next();
+  },
+  taskController.assignTask,
 );
 
 module.exports = router;

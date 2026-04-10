@@ -1,6 +1,32 @@
 const User = require("../models/User");
 const Task = require("../models/Task");
 
+// GET /api/team/members - Get current user's team members
+exports.getCurrentUserTeamMembers = async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.user._id);
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const members = await User.find({
+      team: currentUser.team,
+      status: "approved",
+      role: "employee",
+    })
+      .select("_id firstName lastName designation team avatarUrl")
+      .sort({ firstName: 1 });
+
+    res.json({
+      members,
+      team: currentUser.team,
+      memberCount: members.length,
+    });
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // GET /api/teams/:teamName
 exports.getTeamMembers = async (req, res) => {
   try {

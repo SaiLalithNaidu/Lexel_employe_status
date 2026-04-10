@@ -7,9 +7,9 @@ const Notification = require("../models/Notification");
 // GET /api/admin/pending-users
 exports.getPendingUsers = async (req, res) => {
   try {
-    const users = await User.find({ status: "pending", role: "employee" }).sort(
-      { createdAt: -1 },
-    );
+    const users = await User.find({ status: "pending", role: "employee" })
+      .select("-password")
+      .sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -23,7 +23,7 @@ exports.approveUser = async (req, res) => {
       req.params.id,
       { status: "approved" },
       { new: true },
-    );
+    ).select("-password");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -42,7 +42,7 @@ exports.rejectUser = async (req, res) => {
       req.params.id,
       { status: "rejected" },
       { new: true },
-    );
+    ).select("-password");
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -57,7 +57,9 @@ exports.rejectUser = async (req, res) => {
 // GET /api/admin/users
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({ role: "employee" }).sort({ createdAt: -1 });
+    const users = await User.find({ role: "employee" })
+      .select("-password")
+      .sort({ createdAt: -1 });
     res.json(users);
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });
@@ -69,10 +71,21 @@ exports.getAllUsers = async (req, res) => {
 // POST /api/admin/tasks - Create and assign task
 exports.createTaskForEmployee = async (req, res) => {
   try {
-    const { title, description, priority, category, selectedEmployees, dueDate, estimatedDuration, subtasks } = req.body;
+    const {
+      title,
+      description,
+      priority,
+      category,
+      selectedEmployees,
+      dueDate,
+      estimatedDuration,
+      subtasks,
+    } = req.body;
 
     if (!title || !selectedEmployees || selectedEmployees.length === 0) {
-      return res.status(400).json({ message: "Title and selected employees required" });
+      return res
+        .status(400)
+        .json({ message: "Title and selected employees required" });
     }
 
     const createdTasks = [];
@@ -128,7 +141,7 @@ exports.getAllAssignedTasks = async (req, res) => {
 
     if (team) {
       const teamMembers = await User.find({ team });
-      query.userId = { $in: teamMembers.map(m => m._id) };
+      query.userId = { $in: teamMembers.map((m) => m._id) };
     }
 
     if (status) query.status = status;
@@ -142,10 +155,15 @@ exports.getAllAssignedTasks = async (req, res) => {
 
     const stats = {
       total: tasks.length,
-      pending: tasks.filter(t => t.status === "pending").length,
-      inProgress: tasks.filter(t => t.status === "in_progress").length,
-      completed: tasks.filter(t => t.status === "completed").length,
-      overdue: tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "completed").length,
+      pending: tasks.filter((t) => t.status === "pending").length,
+      inProgress: tasks.filter((t) => t.status === "in_progress").length,
+      completed: tasks.filter((t) => t.status === "completed").length,
+      overdue: tasks.filter(
+        (t) =>
+          t.dueDate &&
+          new Date(t.dueDate) < new Date() &&
+          t.status !== "completed",
+      ).length,
     };
 
     res.json({ success: true, tasks, stats });
@@ -170,7 +188,7 @@ exports.updateTask = async (req, res) => {
     if (status && task.status !== status) {
       task.status = status;
       updatedFields.push("status");
-      
+
       // Notify task owner
       if (task.userId.toString() !== req.user._id.toString()) {
         notificationsToSend.push({
@@ -202,7 +220,7 @@ exports.updateTask = async (req, res) => {
       task.userId = reassignTo;
       task.forwardedTo = null;
       updatedFields.push("reassignedTo");
-      
+
       notificationsToSend.push({
         recipientId: reassignTo,
         type: "task_assigned",
@@ -243,9 +261,15 @@ exports.getEmployeesWithStats = async (req, res) => {
     const employeesWithStats = await Promise.all(
       employees.map(async (employee) => {
         const allTasks = await Task.find({ userId: employee._id });
-        const completedTasks = allTasks.filter(t => t.status === "completed").length;
-        const pendingTasks = allTasks.filter(t => t.status === "pending").length;
-        const inProgressTasks = allTasks.filter(t => t.status === "in_progress").length;
+        const completedTasks = allTasks.filter(
+          (t) => t.status === "completed",
+        ).length;
+        const pendingTasks = allTasks.filter(
+          (t) => t.status === "pending",
+        ).length;
+        const inProgressTasks = allTasks.filter(
+          (t) => t.status === "in_progress",
+        ).length;
 
         return {
           id: employee._id,
@@ -259,12 +283,15 @@ exports.getEmployeesWithStats = async (req, res) => {
           completedTasks,
           pendingTasks,
           inProgressTasks,
-          completionRate: allTasks.length > 0 ? ((completedTasks / allTasks.length) * 100).toFixed(2) : 0,
+          completionRate:
+            allTasks.length > 0
+              ? ((completedTasks / allTasks.length) * 100).toFixed(2)
+              : 0,
           avatarUrl: employee.avatarUrl,
           joinDate: employee.createdAt,
           lastActive: employee.updatedAt,
         };
-      })
+      }),
     );
 
     res.json({ success: true, employees: employeesWithStats });
@@ -287,11 +314,18 @@ exports.getEmployeeDetail = async (req, res) => {
 
     const stats = {
       totalTasks: tasks.length,
-      completedTasks: tasks.filter(t => t.status === "completed").length,
-      pendingTasks: tasks.filter(t => t.status === "pending").length,
-      inProgressTasks: tasks.filter(t => t.status === "in_progress").length,
-      completionRate: tasks.length > 0 ? ((tasks.filter(t => t.status === "completed").length / tasks.length) * 100).toFixed(2) : 0,
-      thisWeekCompleted: tasks.filter(t => {
+      completedTasks: tasks.filter((t) => t.status === "completed").length,
+      pendingTasks: tasks.filter((t) => t.status === "pending").length,
+      inProgressTasks: tasks.filter((t) => t.status === "in_progress").length,
+      completionRate:
+        tasks.length > 0
+          ? (
+              (tasks.filter((t) => t.status === "completed").length /
+                tasks.length) *
+              100
+            ).toFixed(2)
+          : 0,
+      thisWeekCompleted: tasks.filter((t) => {
         const oneWeekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
         return t.status === "completed" && t.updatedAt >= oneWeekAgo;
       }).length,
@@ -333,7 +367,7 @@ exports.getAnalytics = async (req, res) => {
       const tasks = await Task.find({ userId: employee._id });
       allTasks = [...allTasks, ...tasks];
 
-      const completed = tasks.filter(t => t.status === "completed").length;
+      const completed = tasks.filter((t) => t.status === "completed").length;
       const total = tasks.length;
 
       employeeMetrics.push({
@@ -347,12 +381,20 @@ exports.getAnalytics = async (req, res) => {
 
     const analytics = {
       totalTasks: allTasks.length,
-      completedTasks: allTasks.filter(t => t.status === "completed").length,
-      pendingTasks: allTasks.filter(t => t.status === "pending").length,
-      inProgressTasks: allTasks.filter(t => t.status === "in_progress").length,
-      overdueTasks: allTasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "completed").length,
+      completedTasks: allTasks.filter((t) => t.status === "completed").length,
+      pendingTasks: allTasks.filter((t) => t.status === "pending").length,
+      inProgressTasks: allTasks.filter((t) => t.status === "in_progress")
+        .length,
+      overdueTasks: allTasks.filter(
+        (t) =>
+          t.dueDate &&
+          new Date(t.dueDate) < new Date() &&
+          t.status !== "completed",
+      ).length,
       totalEmployees: employees.length,
-      employeeMetrics: employeeMetrics.sort((a, b) => parseFloat(b.completionRate) - parseFloat(a.completionRate)),
+      employeeMetrics: employeeMetrics.sort(
+        (a, b) => parseFloat(b.completionRate) - parseFloat(a.completionRate),
+      ),
     };
 
     res.json({ success: true, analytics });
