@@ -211,10 +211,10 @@ export default function EmployeePage() {
               <span className="px-3 py-1 rounded-full bg-primary-50 text-primary-700 text-sm font-medium">
                 {employee.team}
               </span>
-              <span className="text-sm text-slate-400">•</span>
+              {/* <span className="text-sm text-slate-400">•</span>
               <span className="text-sm text-slate-500">
                 {employee.designation}
-              </span>
+              </span> */}
             </div>
           </div>
 
