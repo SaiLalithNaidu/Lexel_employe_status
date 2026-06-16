@@ -1,7 +1,7 @@
 import { createContext, useContext, useReducer, useEffect } from "react";
 import api from "../api/client";
 
-const AuthContext = createContext(null);
+const AuthContext = createContext(null); 
 
 const initialState = {
   user: JSON.parse(localStorage.getItem("user")) || null,
